@@ -1,0 +1,13 @@
+/*
+!/.gitignore
+!/README.md
+!/index.html
+!/server.js
+!/src/
+!/src/**
+!/data/
+!/data/**
+!/assets/
+!/assets/**
+!/docs/
+!/docs/**

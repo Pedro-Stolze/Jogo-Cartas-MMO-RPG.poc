@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#111018">
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+    <title>Os Reinados — duelo de cartas</title>
+    <link rel="stylesheet" href="src/styles.css">
+  </head>
+  <body>
+    <main id="setup" class="setup-screen">
+      <div class="setup-art" aria-hidden="true"></div>
+      <section class="setup-panel">
+        <div class="eyebrow">JOGO DE CARTAS DE FANTASIA</div>
+        <h1>OS <span>REINADOS</span></h1>
+        <p class="intro">Escolha um reino, monte sua estratégia e enfrente a inteligência artificial.</p>
+        <form id="setup-form">
+          <label for="player-kingdom">Seu reino</label>
+          <select id="player-kingdom" required></select>
+          <label for="ai-kingdom">Reino da IA</label>
+          <select id="ai-kingdom" required></select>
+          <button class="primary-button" type="submit">Começar duelo <span aria-hidden="true">→</span></button>
+        </form>
+        <div class="rules-summary">
+          <div><strong>20</strong><span>vida</span></div>
+          <div><strong>30</strong><span>cartas</span></div>
+          <div><strong>10</strong><span>energia máx.</span></div>
+        </div>
+        <p class="source-note">Partida de teste baseada no Manual do Jogador e nas cartas escritas do projeto.</p>
+      </section>
+    </main>
+
+    <main id="game" class="game-screen" hidden>
+      <header class="topbar">
+        <a class="brand" href="#" id="new-game">OS <span>REINADOS</span></a>
+        <div id="turn-label" class="turn-label"></div>
+        <button id="rules-button" class="subtle-button" type="button">Regras</button>
+      </header>
+
+      <div class="table-layout">
+        <section class="duel">
+          <section class="player-area opponent-area">
+            <div class="player-summary">
+              <div class="avatar ai-avatar">IA</div>
+              <div class="player-names"><strong id="ai-name"></strong><span>Oponente</span></div>
+              <div class="life-display"><span>♥</span><strong id="ai-life">20</strong><small>VIDA</small></div>
+              <div class="resource-display"><span>✦</span><strong id="ai-energy">1 / 1</strong><small>ENERGIA</small></div>
+              <div class="deck-display"><span id="ai-deck-count">30</span><small>BARALHO</small></div>
+              <div class="hidden-hand" aria-label="Cartas na mão da IA"><span>▰</span><b id="ai-hand-count">5</b><small>NA MÃO</small></div>
+            </div>
+            <div class="field-label"><span>CAMPO DO OPONENTE</span><span id="ai-field-count">0 / 5</span></div>
+            <div id="ai-board" class="board"></div>
+            <div id="ai-permanents" class="permanents"></div>
+          </section>
+
+          <section class="table-middle">
+            <div class="versus-mark"><span></span><b>VS</b><span></span></div>
+            <div class="middle-controls">
+              <div id="status-message" class="status-message"></div>
+              <button id="cancel-action" class="cancel-button" type="button" hidden>Cancelar seleção</button>
+              <button id="end-turn" class="end-turn-button" type="button">Encerrar turno <span>→</span></button>
+            </div>
+            <div id="battle-log" class="battle-log" aria-live="polite"></div>
+          </section>
+
+          <section class="player-area">
+            <div class="field-label"><span>SEU CAMPO</span><span id="player-field-count">0 / 5</span></div>
+            <div id="player-board" class="board"></div>
+            <div id="player-permanents" class="permanents"></div>
+            <div class="player-summary">
+              <div class="avatar player-avatar">EU</div>
+              <div class="player-names"><strong>Você</strong><span id="player-name"></span></div>
+              <div class="life-display"><span>♥</span><strong id="player-life">20</strong><small>VIDA</small></div>
+              <div class="resource-display"><span>✦</span><strong id="player-energy">1 / 1</strong><small>ENERGIA</small></div>
+              <div class="deck-display"><span id="player-deck-count">30</span><small>BARALHO</small></div>
+              <div class="hidden-hand"><span>▰</span><b id="player-hand-count">5</b><small>NA MÃO</small></div>
+            </div>
+            <div class="hand-heading"><span>SUA MÃO</span><span>Clique em uma carta para jogar</span></div>
+            <div id="player-hand" class="hand"></div>
+          </section>
+        </section>
+
+        <aside class="side-panel">
+          <div class="panel-heading"><span class="spark">✦</span><div><strong>CRÔNICA DA BATALHA</strong><small>Registro do duelo</small></div></div>
+          <div id="event-log" class="event-log" aria-live="polite"></div>
+          <div class="side-rules">
+            <strong>Turno atual</strong>
+            <span>1. Recuperar energia e comprar</span>
+            <span>2. Jogar cartas e preparar o campo</span>
+            <span>3. Atacar por ordem de velocidade</span>
+            <span>Vitória: reduza a vida rival a zero</span>
+          </div>
+          <button id="back-to-menu" class="subtle-button menu-button" type="button">Voltar ao menu</button>
+        </aside>
+      </div>
+    </main>
+
+    <div id="dialog" class="dialog-backdrop" hidden>
+      <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
+        <button id="close-dialog" class="dialog-close" type="button" aria-label="Fechar">×</button>
+        <div class="eyebrow">OS REINADOS</div>
+        <h2 id="dialog-title"></h2>
+        <div id="dialog-content"></div>
+      </section>
+    </div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="src/app.js"></script>
+  </body>
+</html>
