@@ -16,6 +16,7 @@ let aiTimer = 0;
 const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
 })[char]);
+const cardDescription = (card) => card.description.replace(/^descri[cç][aã]o visual:\s*/i, "");
 const makeUid = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 const shuffle = (items) => {
   const shuffled = [...items];
@@ -252,10 +253,11 @@ function renderHandCard(card) {
   const stats = card.type === "Criatura"
     ? `<div class="card-stats"><span>⚔ ${card.attack}</span><span>◆ ${card.defense}</span><span>♥ ${card.health}</span><span>➤ ${card.speed}</span></div>`
     : "";
-  return `<button class="hand-card" type="button" data-card-id="${escapeHtml(card.uid)}" ${canAfford ? "" : "disabled"} title="${escapeHtml(card.name)} — ${escapeHtml(card.effect)}">
+  const details = [card.name, card.kingdom, cardDescription(card), card.effect].filter(Boolean).join("\n");
+  return `<button class="hand-card" type="button" data-card-id="${escapeHtml(card.uid)}" ${canAfford ? "" : "disabled"} title="${escapeHtml(details)}" aria-label="${escapeHtml(details)}">
     <span class="hand-art"><img src="${art}" alt="" loading="lazy"></span>
     <span class="card-cost">${card.cost}</span><span class="card-kingdom">${escapeHtml(card.kingdom)}</span><span class="card-rarity">${escapeHtml(card.rarity)}</span>
-    <span class="hand-card-content"><span class="card-name">${escapeHtml(card.name)}</span><span class="card-type">${escapeHtml(card.type)}</span>${stats}<span class="card-effect">${escapeHtml(card.effect)}</span></span>
+    <span class="hand-card-content"><span class="card-name">${escapeHtml(card.name)}</span><span class="card-type">${escapeHtml(card.type)}</span>${stats}<span class="card-effect"><b>HABILIDADE</b> ${escapeHtml(card.effect)}</span><span class="card-description">${escapeHtml(cardDescription(card))}</span></span>
   </button>`;
 }
 
@@ -283,11 +285,18 @@ function renderBoard(player, owner) {
     const isTarget = game.pendingCard && game.active === 0 && targetOwnerForPending() === owner;
     const isFastest = game.active === 0 && owner === 0 && canChooseAttacker(unit, 0);
     const healthClass = unit.currentHealth <= Math.max(1, unit.healthMax / 2) ? "wounded" : "";
+    const healthMaximum = maxHealth(unit);
+    const healthPercent = Math.max(0, Math.min(100, healthMaximum ? unit.currentHealth / healthMaximum * 100 : 0));
     const sleep = unit.sleepTurns > 0 ? `<span class="sleep-badge">Zzz</span>` : "";
     const hint = selected ? "Escolha um alvo inimigo" : (isFastest ? "Mais veloz — clique para atacar" : "");
-    const card = `<div class="unit-card ${selected ? "selected" : ""} ${isTarget ? "targetable" : ""} ${isFastest ? "attacker" : ""}" data-unit-id="${escapeHtml(unit.uid)}" data-owner="${owner}" role="button" tabindex="0">
+    const details = [unit.name, unit.kingdom, cardDescription(unit), unit.effect].filter(Boolean).join("\n");
+    const feedback = unit.feedback && unit.feedbackUntil > Date.now() ? ` ${unit.feedback}-flash` : "";
+    const card = `<div class="unit-card ${selected ? "selected" : ""} ${isTarget ? "targetable" : ""} ${isFastest ? "attacker" : ""}${feedback}" data-unit-id="${escapeHtml(unit.uid)}" data-owner="${owner}" role="button" tabindex="0" title="${escapeHtml(details)}" aria-label="${escapeHtml(details)}">
       <div class="unit-art"><img src="${escapeHtml(unit.image)}" alt="" loading="lazy"></div><span class="realm-badge">${escapeHtml(unit.kingdom)}</span>${sleep}
-      <div class="unit-content"><span class="unit-name">${escapeHtml(unit.name)}</span><span class="unit-state"><span>⚔ ${stat(unit, "attack")}</span><span>◆ ${stat(unit, "defense")}</span><span class="${healthClass}">♥ ${unit.currentHealth}/${maxHealth(unit)}</span><span>➤ ${stat(unit, "speed")}</span></span><span class="unit-hint">${hint}</span></div>
+      <div class="unit-content"><span class="unit-name">${escapeHtml(unit.name)}</span><span class="unit-description">${escapeHtml(cardDescription(unit))}</span>
+        <span class="unit-state"><span title="Ataque">⚔ ${stat(unit, "attack")}</span><span title="Defesa">◆ ${stat(unit, "defense")}</span><span class="${healthClass}" title="Vida atual / máxima">♥ ${unit.currentHealth}/${healthMaximum}</span><span title="Velocidade">➤ ${stat(unit, "speed")}</span></span>
+        <span class="unit-health-track" aria-label="Vida: ${unit.currentHealth} de ${healthMaximum}"><span style="width:${healthPercent}%"></span></span>
+        <span class="unit-effect">${escapeHtml(unit.effect || "Sem habilidade especial.")}</span><span class="unit-hint">${hint}</span></div>
     </div>`;
     return card;
   }).join("");
@@ -427,7 +436,7 @@ function applyItemStats(unit, card) {
 function resolveEffect(card, owner, trigger, target = null) {
   const text = card.effect;
   const lower = text.toLowerCase();
-  if (trigger === "attack" && !/(ao atacar|quando ataca|ao atacar)/i.test(lower)) return;
+  if (trigger === "attack" && !/(ao atacar|quando ataca)/i.test(lower)) return;
 
   const amountMatch = lower.match(/(?:cure|cura|cure|cause|causa|causar|recebe|reduz|perde|perdem)\s+(\d+)/i)
     || lower.match(/\+(\d+)/);
@@ -446,7 +455,9 @@ function resolveEffect(card, owner, trigger, target = null) {
 
   if (/dorm|sono|atordo/i.test(lower)) {
     const enemyField = game.players[1 - owner].field;
-    const selectedTargets = allEnemies ? enemyField : target ? [target] : /criatura inimiga/i.test(lower) ? [...enemyField].sort((a, b) => stat(b, "attack") - stat(a, "attack")).slice(0, 1) : [];
+    const selectedTargets = trigger === "attack"
+      ? target && target.currentHealth > 0 ? [target] : []
+      : allEnemies ? enemyField : target ? [target] : /criatura inimiga/i.test(lower) ? [...enemyField].sort((a, b) => stat(b, "attack") - stat(a, "attack")).slice(0, 1) : [];
     for (const unit of selectedTargets.slice(0, /até 2|dois/i.test(lower) ? 2 : selectedTargets.length)) {
       const duration = (lower.match(/(\d+)\s+turno/) || [])[1] ? Number(lower.match(/(\d+)\s+turno/)[1]) : 1;
       unit.sleepTurns = Math.max(unit.sleepTurns, duration);
@@ -456,6 +467,7 @@ function resolveEffect(card, owner, trigger, target = null) {
   }
 
   if (/cause \d+ de dano|causa \d+ de dano|cause dano|dano verdadeiro/i.test(lower)) {
+    if (trigger === "attack" && /dano adicional/i.test(lower)) return;
     const damage = amount;
     const targets = allEnemies ? [...game.players[1 - owner].field] : target ? [target] : [];
     for (const unit of targets) {
@@ -469,12 +481,24 @@ function resolveEffect(card, owner, trigger, target = null) {
 
   if (/cure|cura|curar/i.test(lower)) {
     const allies = game.players[owner].field;
-    const targets = /todos|todas/i.test(lower) ? allies : target ? [target] : allies.sort((a, b) => a.currentHealth - b.currentHealth).slice(0, 1);
+    const validTarget = target && target.owner === owner && allies.some((unit) => unit.uid === target.uid) ? target : null;
+    const targets = /todos|todas/i.test(lower) ? allies : validTarget ? [validTarget] : [...allies].sort((a, b) => a.currentHealth - b.currentHealth).slice(0, 1);
+    let restored = 0;
     for (const unit of targets) {
       const value = /completamente/i.test(lower) ? maxHealth(unit) : amount;
-      unit.currentHealth = Math.min(maxHealth(unit), unit.currentHealth + value);
+      const healed = Math.min(value, maxHealth(unit) - unit.currentHealth);
+      if (healed > 0) {
+        unit.currentHealth += healed;
+        restored += healed;
+        showUnitFeedback(unit, "heal");
+        addLog(`${card.name} curou ${healed} de VIDA de ${unit.name}.`);
+      }
     }
-    addLog(`${card.name} restaurou vida às criaturas aliadas.`);
+    if (!restored) addLog(`${card.name} não restaurou vida: nenhum aliado precisava de cura.`);
+    if (/compra 1 carta|compre 1 carta/i.test(lower)) {
+      drawCard(owner);
+      addLog(`${game.players[owner].name} comprou uma carta pelo efeito de ${card.name}.`);
+    }
     return;
   }
 
@@ -498,7 +522,7 @@ function resolveEffect(card, owner, trigger, target = null) {
     applyStatReduction(lower, owner, target);
   }
 
-  if (/\+\d+\s*(atk|def|vel|vida)/i.test(lower)) {
+  if (trigger !== "attack" && /\+\d+\s*(atk|def|vel|vida)/i.test(lower)) {
     const statMatches = [...lower.matchAll(/\+(\d+)\s*(atk|def|vel|vida)/g)];
     const chosenTargets = target ? [target] : allAllies ? game.players[owner].field.filter((unit) => {
       const realmMatch = /(fada|orc|dragão|animal|natureza|índio|tribo)/i.exec(lower);
@@ -544,8 +568,20 @@ function applyStartOfTurn(owner) {
 
 function damageUnit(unit, amount, source) {
   unit.currentHealth -= amount;
+  if (amount > 0) showUnitFeedback(unit, "damage");
   addLog(`${source} causou ${amount} de dano a ${unit.name}.`);
   if (unit.currentHealth <= 0) destroyUnit(unit, source);
+}
+
+function showUnitFeedback(unit, type) {
+  unit.feedback = type;
+  unit.feedbackUntil = Date.now() + 850;
+  const feedbackUntil = unit.feedbackUntil;
+  setTimeout(() => {
+    if (!game || unit.feedbackUntil !== feedbackUntil) return;
+    unit.feedback = "";
+    render();
+  }, 850);
 }
 
 function destroyUnit(unit, source) {
@@ -576,10 +612,19 @@ function attack(attacker, defender) {
   const owner = attacker.owner;
   const enemy = game.players[1 - owner];
   if (enemy.field.length && !defender) return;
+  const text = attacker.effect.toLowerCase();
+  const attackBonusMatch = text.match(/recebe \+(\d+) atk ao atacar|ao atacar[^.]*?recebe \+(\d+) atk/);
+  const attackBonus = attackBonusMatch && !/recebe \+\d+ atk ao atacar criaturas com vel menor/i.test(text)
+    ? Number(attackBonusMatch[1] || attackBonusMatch[2])
+    : 0;
+  const temporaryBonus = text.match(/ao atacar[^.]*?recebe \+(\d+) atk[^.]*até o (?:fim|final) do turno/);
+  if (temporaryBonus) attacker.temporary.attack += Number(temporaryBonus[1]);
   if (!enemy.field.length) {
-    enemy.life -= stat(attacker, "attack");
+    const damage = stat(attacker, "attack") + (temporaryBonus ? 0 : attackBonus);
+    enemy.life -= damage;
     attacker.attacksMade = (attacker.attacksMade || 0) + 1;
-    addLog(`${attacker.name} atacou diretamente: ${stat(attacker, "attack")} de dano à vida de ${enemy.name}.`);
+    showUnitFeedback(attacker, "attack");
+    addLog(`${attacker.name} atacou diretamente: ${damage} de dano à vida de ${enemy.name}.`);
     resolveEffect(attacker, owner, "attack", null);
     if (owner === 0) setStatus(`${attacker.name} atacou diretamente. Escolha outra ação ou encerre o turno.`);
     render();
@@ -587,20 +632,20 @@ function attack(attacker, defender) {
     return;
   }
   if (!defender) return;
-  const text = attacker.effect.toLowerCase();
-  const attackBonus = (/recebe \+1 atk ao atacar|quando ataca recebe \+1 atk/i.test(text) ? 1 : 0)
-    + (/recebe \+1 atk ao atacar criaturas com vel menor/i.test(text) && stat(defender, "speed") < stat(attacker, "speed") ? 1 : 0)
+  const conditionalAttackBonus = (/recebe \+\d+ atk ao atacar criaturas com vel menor/i.test(text) && stat(defender, "speed") < stat(attacker, "speed") ? Number((text.match(/recebe \+(\d+) atk ao atacar criaturas com vel menor/i) || [])[1]) : 0)
     + (defender.sleepTurns > 0 && /criaturas dormindo recebem \+(\d+) de dano/i.test([...game.players[owner].field, ...game.players[owner].permanents].map((unit) => unit.effect.toLowerCase()).join(" ")) ? Number([...game.players[owner].field, ...game.players[owner].permanents].map((unit) => unit.effect.toLowerCase()).join(" ").match(/criaturas dormindo recebem \+(\d+) de dano/)[1]) : 0);
   const ignoresDefense = /ignoram bônus de def|ignoram.*def/i.test(text);
   const defense = ignoresDefense ? 0 : stat(defender, "defense");
   const additionalDamage = Number((text.match(/causa (\d+) de dano adicional/i) || [])[1] || 0);
-  const dealt = Math.max(0, stat(attacker, "attack") + attackBonus - defense) + additionalDamage;
+  const dealt = Math.max(0, stat(attacker, "attack") + (temporaryBonus ? 0 : attackBonus) + conditionalAttackBonus - defense) + additionalDamage;
+  showUnitFeedback(attacker, "attack");
   if (/ao atacar recebe \+1 def|quando ataca recebe \+1 def/i.test(text)) attacker.temporary.defense += 1;
   for (const source of game.players[owner].field) {
     if (source.realm === attacker.realm && /sempre que um animal aliado atacar|quando um animal aliado atacar/i.test(source.effect.toLowerCase())) attacker.temporary.attack += 1;
   }
   const defenderWasAlive = defender.currentHealth > 0;
   damageUnit(defender, dealt, attacker.name);
+  resolveEffect(attacker, owner, "attack", defender.currentHealth > 0 ? defender : null);
   if (defenderWasAlive && defender.currentHealth > 0 && attacker.currentHealth > 0 && !defender.sleepTurns) {
     const retaliation = Math.max(0, stat(defender, "attack") - stat(attacker, "defense"));
     damageUnit(attacker, retaliation, defender.name);
@@ -614,7 +659,6 @@ function attack(attacker, defender) {
     drawCard(owner);
     addLog(`${attacker.name} comprou uma carta.`);
   }
-  resolveEffect(attacker, owner, "attack", defender);
   if (owner === 0) setStatus(`${attacker.name} concluiu o ataque.`);
   render();
   checkWinner();

@@ -19,6 +19,8 @@ Durante o turno, pode jogar ate 2 criaturas, 1 equipamento e 1 montaria. O campo
 - Criaturas invocadas nao atacam no mesmo turno, exceto quando o efeito permite.
 - Ataque primeiro com a criatura disponível de maior velocidade. Empates podem ser resolvidos em qualquer ordem.
 - O dano de ataque é ATK menos DEF, no mínimo zero. A criatura defensora revida usando a mesma regra.
+- Habilidades disparadas por um ataque são resolvidas durante o combate; dano adicional é aplicado uma única vez e efeitos de sono podem impedir o contra-ataque.
+- Habilidades de cura restauram vida de criaturas aliadas, sem ultrapassar a vida máxima. O campo mostra a vida atual, os atributos, a habilidade e a descrição visual das cartas.
 - Sem criaturas inimigas, o ataque causa dano direto ao jogador rival.
 - Sono impede uma criatura de atacar durante o proximo turno dela.
 

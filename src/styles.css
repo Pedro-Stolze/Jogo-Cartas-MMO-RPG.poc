@@ -116,33 +116,45 @@ h1 span, .brand span { color: var(--gold-bright); }
 .hidden-hand span { color: #aa885a; font-size: 19px; }
 .field-label { display: flex; justify-content: space-between; margin: 12px 0 8px; color: #a7a0ad; font-size: 9px; }
 .field-label span:last-child { color: #736d7a; }
-.board { display: flex; align-items: stretch; gap: 9px; min-height: 141px; overflow-x: auto; padding: 2px 2px 8px; }
-.board:empty::after { content: "Campo vazio"; display: grid; place-items: center; width: 100%; min-height: 120px; color: #625c68; border: 1px dashed #ffffff16; font-size: 11px; }
+.board { display: flex; align-items: stretch; gap: 10px; min-height: 207px; overflow-x: auto; padding: 4px 4px 11px; }
+.board:empty::after { content: "Campo vazio — invoque criaturas para preparar sua linha de batalha"; display: grid; place-items: center; width: 100%; min-height: 178px; color: #817987; border: 1px dashed #ffffff24; font-size: 11px; }
 .unit-card {
   position: relative;
-  flex: 1 0 132px;
-  max-width: 170px;
-  min-height: 128px;
+  flex: 1 0 154px;
+  max-width: 205px;
+  min-height: 190px;
   overflow: hidden;
   padding: 0;
   text-align: left;
   border: 1px solid #baa16d66;
   color: var(--ink);
   background: #211d25;
-  box-shadow: 0 5px 16px #0005;
+  box-shadow: 0 7px 22px #0007;
+  transition: border-color .18s, box-shadow .18s, transform .18s;
 }
-.unit-card.targetable { cursor: pointer; border-color: #f1cf7f; box-shadow: 0 0 0 2px #e2b95c66, 0 0 16px #e2b95c55; }
-.unit-card.attacker { cursor: pointer; }
+.unit-card.targetable { cursor: pointer; border-color: #f1cf7f; box-shadow: 0 0 0 2px #e2b95c66, 0 0 22px #e2b95c77; transform: translateY(-2px); }
+.unit-card.attacker { cursor: pointer; border-color: #e0b96f99; }
+.unit-card.attacker:hover { transform: translateY(-3px); box-shadow: 0 0 20px #e0b96f40; }
 .unit-card.selected { outline: 2px solid var(--gold-bright); }
 .unit-art { position: absolute; inset: 0; background: linear-gradient(0deg, #17141deb 0%, #17141d9c 42%, #17141d10 100%); }
-.unit-art img { position: absolute; width: 100%; height: 100%; object-fit: cover; opacity: .58; }
+.unit-art img { position: absolute; width: 100%; height: 100%; object-fit: cover; opacity: .66; }
 .realm-badge { position: absolute; z-index: 2; top: 7px; left: 7px; max-width: calc(100% - 14px); overflow: hidden; padding: 4px 6px; color: #f3ddaa; border: 1px solid #d1aa6177; background: #17141ddd; font-size: 8px; font-weight: 700; letter-spacing: .07em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
-.unit-content { position: relative; z-index: 1; display: flex; height: 100%; min-height: 128px; flex-direction: column; justify-content: flex-end; padding: 9px; }
-.unit-name { font: 700 11px Georgia, serif; line-height: 1.2; text-shadow: 0 1px 6px #000; }
-.unit-state { display: flex; gap: 8px; margin-top: 6px; color: #f0dfb9; font-size: 9px; font-weight: 700; }
+.unit-content { position: relative; z-index: 1; display: flex; height: 100%; min-height: 190px; flex-direction: column; justify-content: flex-end; padding: 10px; background: linear-gradient(0deg, #141119f5 0%, #17141dbd 56%, transparent 100%); }
+.unit-name { font: 700 13px Georgia, serif; line-height: 1.2; text-shadow: 0 1px 7px #000; }
+.unit-description { display: -webkit-box; overflow: hidden; margin-top: 4px; color: #c7bdcb; font-size: 8px; line-height: 1.25; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
+.unit-state { display: flex; justify-content: space-between; gap: 5px; margin-top: 8px; padding: 6px 5px; color: #f0dfb9; border: 1px solid #ffffff1a; background: #0f0d14ad; font-size: 10px; font-weight: 700; }
 .unit-state .wounded { color: #ff9b8f; }
+.unit-health-track { display: block; height: 4px; overflow: hidden; margin: 4px 1px 0; background: #5b3232; }
+.unit-health-track span { display: block; height: 100%; background: linear-gradient(90deg, #c3444d, #f18576); transition: width .35s; }
+.unit-effect { display: -webkit-box; overflow: hidden; margin-top: 7px; color: #f1d48f; font-size: 8px; line-height: 1.3; text-shadow: 0 1px 4px #000; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .unit-hint { margin-top: 5px; color: #e7c56e; font-size: 8px; }
 .sleep-badge { position: absolute; top: 5px; right: 5px; padding: 3px 5px; color: #d8c9ff; background: #312542e8; font-size: 8px; }
+.damage-flash { animation: damage-impact .8s ease-out; }
+.heal-flash { animation: heal-glow .8s ease-out; }
+.attack-flash { animation: attack-pulse .65s ease-out; }
+@keyframes damage-impact { 20% { border-color: #ff7777; box-shadow: 0 0 24px #ed464caa; } 100% { border-color: #baa16d66; } }
+@keyframes heal-glow { 20% { border-color: #8ff0a1; box-shadow: 0 0 26px #4ee477aa; } 100% { border-color: #baa16d66; } }
+@keyframes attack-pulse { 35% { box-shadow: 0 0 24px #f2ca65aa; transform: scale(1.025); } 100% { transform: scale(1); } }
 .permanents { display: flex; gap: 6px; flex-wrap: wrap; min-height: 0; margin-top: 0; }
 .permanent-chip { padding: 4px 8px; color: #d0ba86; border: 1px solid #b1935550; background: #302a24; font-size: 9px; }
 .table-middle { display: grid; grid-template-columns: 70px minmax(220px, 1fr) minmax(150px, .8fr); align-items: center; gap: 15px; min-height: 48px; padding: 0 12px; }
@@ -170,14 +182,14 @@ h1 span, .brand span { color: var(--gold-bright); }
 .menu-button { margin-top: 10px; }
 .hand-heading { display: flex; justify-content: space-between; margin: 11px 0 8px; font-size: 9px; }
 .hand-heading span:last-child { color: #77717e; font-size: 8px; letter-spacing: .04em; text-transform: none; }
-.hand { display: flex; gap: 9px; overflow-x: auto; padding: 3px 2px 12px; min-height: 190px; }
+.hand { display: flex; gap: 10px; overflow-x: auto; padding: 4px 3px 14px; min-height: 226px; }
 .hand:empty::after { content: "Sem cartas na mão"; display: grid; place-items: center; width: 100%; color: #625c68; font-size: 11px; }
 .hand-card {
   position: relative;
   display: flex;
-  flex: 0 0 121px;
+  flex: 0 0 145px;
   flex-direction: column;
-  height: 177px;
+  height: 210px;
   overflow: hidden;
   padding: 0;
   color: var(--ink);
@@ -187,7 +199,7 @@ h1 span, .brand span { color: var(--gold-bright); }
   box-shadow: 0 4px 12px #0007;
   transition: transform .15s, border-color .15s;
 }
-.hand-card:hover:not(:disabled) { transform: translateY(-7px); border-color: var(--gold-bright); }
+.hand-card:hover:not(:disabled) { transform: translateY(-7px); border-color: var(--gold-bright); box-shadow: 0 8px 24px #000a, 0 0 16px #d7ad6133; }
 .hand-card:disabled { opacity: .47; cursor: not-allowed; filter: grayscale(.45); }
 .hand-art { position: absolute; inset: 0; }
 .hand-art img { width: 100%; height: 100%; object-fit: cover; opacity: .58; }
@@ -195,11 +207,14 @@ h1 span, .brand span { color: var(--gold-bright); }
 .card-cost { position: absolute; z-index: 2; top: 6px; left: 6px; display: grid; place-items: center; width: 23px; height: 23px; border-radius: 50%; color: #fff0c2; border: 1px solid #d8bb78; background: #182943; font: 700 12px Georgia, serif; }
 .card-kingdom { position: absolute; z-index: 2; top: 7px; right: 5px; max-width: calc(100% - 38px); overflow: hidden; padding: 3px 5px; color: #f3ddaa; border: 1px solid #d1aa6177; background: #17141ddd; font-size: 7px; font-weight: 700; letter-spacing: .05em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
 .card-rarity { position: absolute; z-index: 2; top: 28px; right: 5px; color: #e1c282; font-size: 7px; letter-spacing: .06em; text-transform: uppercase; }
-.hand-card-content { position: relative; z-index: 1; display: flex; height: 100%; flex-direction: column; justify-content: flex-end; padding: 8px; }
-.card-name { font: 700 10px Georgia, serif; line-height: 1.2; }
+.hand-card-content { position: relative; z-index: 1; display: flex; height: 100%; flex-direction: column; justify-content: flex-end; padding: 9px; }
+.card-name { font: 700 12px Georgia, serif; line-height: 1.2; }
 .card-type { margin-top: 4px; color: #dbbd79; font-size: 8px; text-transform: uppercase; letter-spacing: .08em; }
 .card-stats { display: flex; justify-content: space-between; margin-top: 7px; padding-top: 5px; border-top: 1px solid #ffffff2b; color: #f0e0bc; font-size: 9px; }
-.card-effect { margin-top: 5px; color: #c3bac8; font-size: 8px; line-height: 1.25; }
+.card-effect, .card-description { display: -webkit-box; overflow: hidden; margin-top: 6px; font-size: 9px; line-height: 1.25; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.card-effect { color: #f1d48f; }
+.card-effect b { color: #d8bd82; font-size: 7px; letter-spacing: .08em; }
+.card-description { color: #c3bac8; font-size: 8px; }
 .toast { position: fixed; z-index: 20; left: 50%; bottom: 22px; max-width: min(90vw, 460px); transform: translate(-50%, 20px); padding: 11px 16px; color: #f3e9d4; border: 1px solid #caa65e; background: #211c20; box-shadow: 0 8px 32px #0009; opacity: 0; pointer-events: none; transition: .2s; font-size: 12px; text-align: center; }
 .toast.visible { opacity: 1; transform: translate(-50%, 0); }
 .dialog-backdrop { position: fixed; z-index: 30; inset: 0; display: grid; place-items: center; padding: 20px; background: #06050bce; }
@@ -229,5 +244,6 @@ h1 span, .brand span { color: var(--gold-bright); }
   .versus-mark { display: none; }
   .middle-controls { flex-wrap: wrap; }
   .status-message { flex-basis: 100%; }
-  .unit-card { flex-basis: 120px; }
+  .unit-card { flex-basis: 148px; }
+  .hand-card { flex-basis: 138px; }
 }
